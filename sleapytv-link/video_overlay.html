@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        #overlay-container {
+            position: absolute;
+            z-index: 9999;
+            display: flex;
+            gap: 12px;
+        }
+
+        .layout-vertical { flex-direction: column; }
+        .layout-horizontal { flex-direction: row; }
+
+        .top-right {
+            top: 25px;
+            right: 25px;
+            align-items: flex-end;
+        }
+
+        .top-left {
+            top: 25px;
+            left: 25px;
+            align-items: flex-start;
+        }
+
+        .bottom-right {
+            bottom: 25px;
+            right: 25px;
+            align-items: flex-end;
+        }
+
+        .bottom-left {
+            bottom: 25px;
+            left: 25px;
+            align-items: flex-start;
+        }
+
+        .modular-link {
+            display: inline-block;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            cursor: pointer;
+        }
+
+        .modular-link:hover {
+            transform: scale(1.08);
+            filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.8));
+        }
+
+        .modular-img {
+            height: 50px;
+            width: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay-container"></div>
+
+    <script>
+        const overlayContainer = document.getElementById('overlay-container');
+
+        const authContext = {
+            token: null,
+            userId: null,
+            channelId: null,
+            clientId: null
+        };
+
+        let currentConfig = null;
+
+        function logExtensionError(context, error) {
+            console.error(`[Extension Error] ${context}:`, error);
+        }
+
+        function isNonEmptyString(value) {
+            return typeof value === 'string' && value.trim().length > 0;
+        }
+
+        function getButtonTitle(button) {
+            return isNonEmptyString(button?.label) ? button.label : 'Button';
+        }
+
+        function handleTwitchAuth(auth) {
+            try {
+                authContext.token = auth && auth.token ? auth.token : null;
+                authContext.userId = auth && auth.userId ? auth.userId : null;
+                authContext.channelId = auth && auth.channelId ? auth.channelId : null;
+                authContext.clientId = auth && auth.clientId ? auth.clientId : null;
+
+                if (!authContext.channelId) {
+                    console.warn('[Extension Auth] Twitch auth completed but channelId is empty.');
+                }
+
+                console.log('[Extension Auth] Authorized context ready:', authContext.channelId);
+            } catch (error) {
+                logExtensionError('onAuthorized', error);
+            }
+        }
+
+        function handleConfigLoaded() {
+            try {
+                const broadcasterConfig = window.Twitch.ext.configuration.broadcaster;
+
+                if (!broadcasterConfig || !broadcasterConfig.content) {
+                    console.warn('[Extension Config] No broadcaster configuration available yet.');
+                    return;
+                }
+
+                currentConfig = JSON.parse(broadcasterConfig.content);
+                renderOverlay(currentConfig);
+            } catch (error) {
+                logExtensionError('configuration.onChanged', error);
+            }
+        }
+
+        function renderOverlay(config) {
+            overlayContainer.innerHTML = '';
+
+            if (!config || !Array.isArray(config.buttons) || config.buttons.length === 0) {
+                console.warn('[Overlay] No buttons to render.');
+                return;
+            }
+
+            const position = config.position || 'top-right';
+            const orientation = config.orientation || 'vertical';
+            overlayContainer.className = `${position} layout-${orientation}`;
+
+            config.buttons.forEach((button) => {
+                if (!button || !isNonEmptyString(button.iconUrl)) {
+                    console.warn('[Overlay] Skipping button without valid iconUrl.', button);
+                    return;
+                }
+
+                const link = document.createElement('a');
+                link.className = 'modular-link';
+                link.title = getButtonTitle(button);
+
+                const img = document.createElement('img');
+                img.className = 'modular-img';
+                img.src = button.iconUrl;
+                img.alt = getButtonTitle(button);
+
+                link.appendChild(img);
+                link.addEventListener('click', (event) => {
+                    handleButtonClick(event, button);
+                });
+
+                overlayContainer.appendChild(link);
+            });
+        }
+
+        function handleButtonClick(event, button) {
+            try {
+                if (event && typeof event.preventDefault === 'function') {
+                    event.preventDefault();
+                }
+
+                if (!button || typeof button !== 'object') {
+                    throw new Error('Button object is missing or invalid.');
+                }
+
+                const buttonType = button.type || 'custom_link';
+                const buttonUrl = isNonEmptyString(button.url) ? button.url.trim() : '';
+
+                switch (buttonType) {
+                    case 'custom_link':
+                    default:
+                        if (!buttonUrl) {
+                            console.warn('[Overlay] custom_link has no valid URL.');
+                            return;
+                        }
+                        window.open(buttonUrl, '_blank');
+                        break;
+
+                    case 'tipply':
+                        if (!buttonUrl) {
+                            console.warn('[Overlay] Tipply button has no valid URL.');
+                            return;
+                        }
+                        window.open(buttonUrl, '_blank');
+                        break;
+
+                    case 'discord':
+                    case 'spotify':
+                        if (!currentConfig || !currentConfig.ebsUrl) {
+                            if (buttonUrl) {
+                                window.open(buttonUrl, '_blank');
+                            } else {
+                                console.warn('[Overlay] Integration action is missing both ebsUrl and url.', button);
+                            }
+                            return;
+                        }
+
+                        if (!authContext.token) {
+                            console.warn('[Overlay] Missing Twitch auth token. Falling back to URL if available.', button);
+                            if (buttonUrl) {
+                                window.open(buttonUrl, '_blank');
+                            }
+                            return;
+                        }
+
+                        fetch(`${currentConfig.ebsUrl}/module-action`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${authContext.token}`
+                            },
+                            body: JSON.stringify({
+                                moduleType: buttonType,
+                                integrationId: button.integrationId || null
+                            })
+                        }).catch((error) => {
+                            logExtensionError('module-action fetch', error);
+                            if (buttonUrl) {
+                                window.open(buttonUrl, '_blank');
+                            }
+                        });
+                        break;
+                }
+            } catch (error) {
+                logExtensionError('handleButtonClick', error);
+            }
+        }
+
+        if (window.Twitch && window.Twitch.ext && typeof window.Twitch.ext.onAuthorized === 'function') {
+            window.Twitch.ext.onAuthorized((auth) => {
+                handleTwitchAuth(auth);
+            });
+        } else {
+            console.warn('[Extension Auth] Twitch extension helper is not available yet.');
+        }
+
+        if (window.Twitch && window.Twitch.ext && window.Twitch.ext.configuration) {
+            window.Twitch.ext.configuration.onChanged(() => {
+                handleConfigLoaded();
+            });
+        } else {
+            console.warn('[Extension Config] Twitch configuration is unavailable.');
+        }
+    </script>
+</body>
+</html>

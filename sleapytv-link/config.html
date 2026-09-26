@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Modular Extension Configuration</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0e0e10;
+            color: #efeff1;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #adadb8;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #303036;
+            background: #18181b;
+            color: #fff;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #9146FF;
+        }
+
+        .button-card {
+            background: #1f1f23;
+            border: 1px solid #303036;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .button-card .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #eb0400;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .add-btn {
+            background: #26262c;
+            color: #efeff1;
+            border: 1px dashed #464649;
+            padding: 10px;
+            border-radius: 6px;
+            width: 100%;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .add-btn:hover {
+            background: #323239;
+        }
+
+        .save-btn {
+            background: #9146FF;
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        .save-btn:hover {
+            background: #772ce8;
+        }
+
+        #status {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #00f59b;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+        }
+
+        .advanced-section {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px dashed #303036;
+        }
+    </style>
+</head>
+<body>
+    <h3 style="margin-top:0;">Modular Screen Links & Integrations</h3>
+
+    <form id="config-form">
+        <div class="form-group">
+            <label for="position">Overlay Position:</label>
+            <select id="position">
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="orientation">Layout Direction:</label>
+            <select id="orientation">
+                <option value="vertical">Vertical (Column)</option>
+                <option value="horizontal">Horizontal (Row)</option>
+            </select>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #303036; margin: 20px 0;">
+        <label>Active Buttons & Integration Modules:</label>
+
+        <div id="buttons-container"></div>
+        <button type="button" class="add-btn" id="add-button-btn">+ Add New Link / Integration Module</button>
+
+        <div class="advanced-section">
+            <label for="ebsUrl">Custom Backend API Endpoint (Optional / Future Use):</label>
+            <input type="url" id="ebsUrl" placeholder="https://api.yourdomain.com/v1">
+        </div>
+
+        <button type="submit" class="save-btn" style="margin-top:20px;">Save All Settings</button>
+        <div id="status">✓ Configuration saved successfully!</div>
+    </form>
+
+    <script>
+        const buttonsContainer = document.getElementById('buttons-container');
+        const statusNode = document.getElementById('status');
+        const addButtonNode = document.getElementById('add-button-btn');
+        const formNode = document.getElementById('config-form');
+
+        let buttonCount = 0;
+
+        function getSafeText(value) {
+            return typeof value === 'string' ? value : '';
+        }
+
+        function createField(labelText, config) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'form-group';
+
+            const label = document.createElement('label');
+            label.textContent = labelText;
+
+            const input = document.createElement('input');
+            input.type = config.type || 'text';
+            input.className = config.className || '';
+            input.value = config.value || '';
+            input.placeholder = config.placeholder || '';
+            input.required = Boolean(config.required);
+
+            if (config.readOnly) {
+                input.readOnly = true;
+            }
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(input);
+            return wrapper;
+        }
+
+        function buildButtonCard(buttonData = {}) {
+            const data = {
+                type: buttonData.type || 'custom_link',
+                label: getSafeText(buttonData.label),
+                url: getSafeText(buttonData.url),
+                iconUrl: getSafeText(buttonData.iconUrl),
+                integrationId: getSafeText(buttonData.integrationId)
+            };
+
+            buttonCount += 1;
+
+            const card = document.createElement('div');
+            card.className = 'button-card';
+            card.id = `card-${buttonCount}`;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.addEventListener('click', () => removeCard(card.id));
+            card.appendChild(removeBtn);
+
+            const typeGroup = document.createElement('div');
+            typeGroup.className = 'form-group';
+
+            const typeLabel = document.createElement('label');
+            typeLabel.textContent = 'Module / Button Type:';
+
+            const typeSelect = document.createElement('select');
+            typeSelect.className = 'btn-type';
+            typeSelect.innerHTML = `
+                <option value="custom_link" ${data.type === 'custom_link' ? 'selected' : ''}>Custom URL Link</option>
+                <option value="tipply" ${data.type === 'tipply' ? 'selected' : ''}>Tipply Donation Widget</option>
+                <option value="discord" ${data.type === 'discord' ? 'selected' : ''}>Discord Invite / Auth Integration</option>
+                <option value="spotify" ${data.type === 'spotify' ? 'selected' : ''}>Spotify Now Playing Integration</option>
+            `;
+
+            typeSelect.addEventListener('change', () => toggleModuleFields(card.id));
+            typeGroup.appendChild(typeLabel);
+            typeGroup.appendChild(typeSelect);
+            card.appendChild(typeGroup);
+
+            const labelField = createField('Button Label / Name:', {
+                type: 'text',
+                className: 'btn-label',
+                value: data.label,
+                placeholder: 'e.g. Tip / Discord',
+                required: true
+            });
+            card.appendChild(labelField);
+
+            const urlWrapper = document.createElement('div');
+            urlWrapper.className = 'form-group field-url';
+
+            const urlLabel = document.createElement('label');
+            urlLabel.textContent = 'Target URL:';
+
+            const urlInput = document.createElement('input');
+            urlInput.type = 'url';
+            urlInput.className = 'btn-url';
+            urlInput.value = data.url;
+            urlInput.placeholder = 'https://...';
+
+            urlWrapper.appendChild(urlLabel);
+            urlWrapper.appendChild(urlInput);
+            card.appendChild(urlWrapper);
+
+            const iconField = createField('Icon URL (Transparent PNG):', {
+                type: 'url',
+                className: 'btn-icon',
+                value: data.iconUrl,
+                placeholder: 'https://i.imgur.com/...',
+                required: true
+            });
+            card.appendChild(iconField);
+
+            const integrationWrapper = document.createElement('div');
+            integrationWrapper.className = 'form-group field-integration';
+            integrationWrapper.style.display = 'none';
+
+            const integrationLabel = document.createElement('label');
+            integrationLabel.textContent = 'Integration Channel / App ID (Future API):';
+
+            const integrationInput = document.createElement('input');
+            integrationInput.type = 'text';
+            integrationInput.className = 'btn-integration-id';
+            integrationInput.value = data.integrationId;
+            integrationInput.placeholder = 'ID / API Key';
+
+            integrationWrapper.appendChild(integrationLabel);
+            integrationWrapper.appendChild(integrationInput);
+            card.appendChild(integrationWrapper);
+
+            buttonsContainer.appendChild(card);
+            toggleModuleFields(card.id);
+        }
+
+        function toggleModuleFields(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+
+            const type = card.querySelector('.btn-type')?.value || 'custom_link';
+            const urlField = card.querySelector('.field-url');
+            const integrationField = card.querySelector('.field-integration');
+
+            if (!urlField || !integrationField) return;
+
+            if (type === 'custom_link') {
+                urlField.style.display = 'block';
+                integrationField.style.display = 'none';
+            } else {
+                urlField.style.display = 'block';
+                integrationField.style.display = 'block';
+            }
+        }
+
+        function removeCard(cardId) {
+            const card = document.getElementById(cardId);
+            if (card) {
+                card.remove();
+            }
+        }
+
+        function loadSavedConfig(config) {
+            const normalizedConfig = config && typeof config === 'object' ? config : {};
+            const positionNode = document.getElementById('position');
+            const orientationNode = document.getElementById('orientation');
+            const ebsUrlNode = document.getElementById('ebsUrl');
+
+            positionNode.value = normalizedConfig.position || 'top-right';
+            orientationNode.value = normalizedConfig.orientation || 'vertical';
+            ebsUrlNode.value = normalizedConfig.ebsUrl || '';
+
+            buttonsContainer.innerHTML = '';
+
+            const buttons = Array.isArray(normalizedConfig.buttons) ? normalizedConfig.buttons : [];
+            if (buttons.length > 0) {
+                buttons.forEach((button) => buildButtonCard(button));
+                return;
+            }
+
+            buildButtonCard({ type: 'custom_link', label: 'Donate', url: '', iconUrl: '' });
+        }
+
+        function setStatusMessage(text, isError = false) {
+            statusNode.textContent = text;
+            statusNode.style.display = 'block';
+            statusNode.style.color = isError ? '#ff6b6b' : '#00f59b';
+            setTimeout(() => {
+                statusNode.style.display = 'none';
+                statusNode.style.color = '#00f59b';
+            }, 3000);
+        }
+
+        function collectButtonData() {
+            const items = [];
+
+            document.querySelectorAll('.button-card').forEach((card) => {
+                const data = {
+                    type: card.querySelector('.btn-type')?.value || 'custom_link',
+                    label: getSafeText(card.querySelector('.btn-label')?.value),
+                    url: getSafeText(card.querySelector('.btn-url')?.value),
+                    iconUrl: getSafeText(card.querySelector('.btn-icon')?.value),
+                    integrationId: getSafeText(card.querySelector('.btn-integration-id')?.value)
+                };
+
+                if (!data.label || !data.iconUrl) {
+                    console.warn('[Config] Skipping incomplete button.', data);
+                    return;
+                }
+
+                if (data.type === 'custom_link' && !data.url) {
+                    console.warn('[Config] Link button is missing URL.', data);
+                }
+
+                items.push(data);
+            });
+
+            return items;
+        }
+
+        addButtonNode.addEventListener('click', () => {
+            buildButtonCard({ type: 'custom_link', label: '', url: '', iconUrl: '' });
+        });
+
+        if (window.Twitch && window.Twitch.ext && window.Twitch.ext.configuration) {
+            window.Twitch.ext.configuration.onChanged(() => {
+                try {
+                    const broadcasterConfig = window.Twitch.ext.configuration.broadcaster;
+                    if (!broadcasterConfig || !broadcasterConfig.content) {
+                        console.warn('[Config] No broadcaster config yet.');
+                        buildButtonCard({ type: 'custom_link', label: 'Donate', url: '', iconUrl: '' });
+                        return;
+                    }
+
+                    const parsed = JSON.parse(broadcasterConfig.content);
+                    loadSavedConfig(parsed);
+                } catch (error) {
+                    console.error('[Config] Failed to parse broadcaster config.', error);
+                    buildButtonCard({ type: 'custom_link', label: 'Donate', url: '', iconUrl: '' });
+                }
+            });
+        } else {
+            console.warn('[Config] Twitch config API not available yet.');
+            buildButtonCard({ type: 'custom_link', label: 'Donate', url: '', iconUrl: '' });
+        }
+
+        formNode.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            try {
+                const configData = {
+                    position: document.getElementById('position').value,
+                    orientation: document.getElementById('orientation').value,
+                    ebsUrl: document.getElementById('ebsUrl').value,
+                    buttons: collectButtonData(),
+                    schemaVersion: '3.0'
+                };
+
+                if (!window.Twitch || !window.Twitch.ext || !window.Twitch.ext.configuration) {
+                    throw new Error('Twitch configuration API is unavailable.');
+                }
+
+                window.Twitch.ext.configuration.set('broadcaster', '1.0', JSON.stringify(configData));
+                setStatusMessage('✓ Configuration saved successfully!');
+            } catch (error) {
+                console.error('[Config] Save failed.', error);
+                setStatusMessage('✕ Failed to save configuration.', true);
+            }
+        });
+    </script>
+</body>
+</html>
