@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+        
+        #overlay-container {
+            position: absolute;
+            z-index: 9999;
+            display: flex;
+            gap: 12px;
+        }
+
+        .layout-vertical { flex-direction: column; }
+        .layout-horizontal { flex-direction: row; }
+
+        .top-right    { top: 25px; right: 25px; align-items: flex-end; }
+        .top-left     { top: 25px; left: 25px; align-items: flex-start; }
+        .bottom-right { bottom: 25px; right: 25px; align-items: flex-end; }
+        .bottom-left  { bottom: 25px; left: 25px; align-items: flex-start; }
+
+        .modular-link {
+            display: inline-block;
+            transition: transform 0.2s ease, filter 0.2s ease;
+            cursor: pointer;
+        }
+
+        .modular-link:hover {
+            transform: scale(1.08);
+            filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.8));
+        }
+
+        .modular-img {
+            height: 50px;
+            width: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="overlay-container"></div>
+
+    <script>
+        const container = document.getElementById('overlay-container');
+        
+        // --- INFRASTRUKTURA AUTORYZACJI TWITCH ---
+        let authContext = {
+            token: null,
+            userId: null,
+            channelId: null,
+            clientId: null
+        };
+
+        let currentConfig = null;
+
+        // Rejestracja autoryzacji Twitcha
+        window.Twitch.ext.onAuthorized((auth) => {
+            authContext.token = auth.token;
+            authContext.userId = auth.userId;
+            authContext.channelId = auth.channelId;
+            authContext.clientId = auth.clientId;
+
+            console.log('[Extension Auth] Authorized context ready:', authContext.channelId);
+        });
+
+        // Wczytywanie konfiguracji
+        window.Twitch.ext.configuration.onChanged(() => {
+            if (window.Twitch.ext.configuration.broadcaster) {
+                try {
+                    currentConfig = JSON.parse(window.Twitch.ext.configuration.broadcaster.content);
+                    renderOverlay(currentConfig);
+                } catch (e) {
+                    console.error('Configuration render error', e);
+                }
+            }
+        });
+
+        function renderOverlay(config) {
+            container.innerHTML = '';
+
+            if (config.buttons && config.buttons.length > 0) {
+                container.className = `${config.position || 'top-right'} layout-${config.orientation || 'vertical'}`;
+                
+                config.buttons.forEach((btn, index) => {
+                    if (btn.iconUrl) {
+                        const a = document.createElement('a');
+                        a.className = 'modular-link';
+                        a.title = btn.label || '';
+                        
+                        const img = document.createElement('img');
+                        img.className = 'modular-img';
+                        img.src = btn.iconUrl;
+                        img.alt = btn.label || 'Button';
+                        a.appendChild(img);
+
+                        // --- ROUTER AKCJI W ZALEŻNOŚCI OD TYPU MODUŁU ---
+                        a.addEventListener('click', (e) => {
+                            handleButtonClick(e, btn);
+                        });
+
+                        container.appendChild(a);
+                    }
+                });
+            }
+        }
+
+        // --- HANDLER KLIKNIĘĆ DLA PRZYSZŁYCH INTEGRACJI ---
+        function handleButtonClick(event, btn) {
+            switch(btn.type) {
+                case 'custom_link':
+                default:
+                    if (btn.url) window.open(btn.url, '_blank');
+                    break;
+                
+                case 'tipply':
+                    // Miejsce na dedykowane okienko / iframe Tipply lub bezpośredni link
+                    if (btn.url) window.open(btn.url, '_blank');
+                    break;
+
+                case 'discord':
+                case 'spotify':
+                    // W przyszłości: Strzał do własnego API (EBS) z tokenem authContext.token
+                    if (currentConfig.ebsUrl) {
+                        fetch(`${currentConfig.ebsUrl}/module-action`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${authContext.token}`
+                            },
+                            body: JSON.stringify({ moduleType: btn.type, integrationId: btn.integrationId })
+                        }).catch(err => console.error('API Error', err));
+                    } else if (btn.url) {
+                        window.open(btn.url, '_blank');
+                    }
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>
