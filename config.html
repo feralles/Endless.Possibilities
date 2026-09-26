@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Modular Extension Configuration</title>
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #0e0e10; color: #efeff1; padding: 20px; margin: 0; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 13px; color: #adadb8; }
+        input, select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #303036; background: #18181b; color: #fff; box-sizing: border-box; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: #9146FF; }
+        
+        .button-card { background: #1f1f23; border: 1px solid #303036; border-radius: 8px; padding: 15px; margin-bottom: 12px; position: relative; }
+        .button-card .remove-btn { position: absolute; top: 10px; right: 10px; background: #eb0400; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 12px; font-weight: bold; }
+        
+        .add-btn { background: #26262c; color: #efeff1; border: 1px dashed #464649; padding: 10px; border-radius: 6px; width: 100%; cursor: pointer; font-weight: 600; margin-bottom: 20px; }
+        .add-btn:hover { background: #323239; }
+        
+        .save-btn { background: #9146FF; color: #fff; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; font-size: 14px; }
+        .save-btn:hover { background: #772ce8; }
+        #status { margin-top: 12px; font-size: 13px; color: #00f59b; font-weight: 500; display: none; text-align: center; }
+        
+        .advanced-section { margin-top: 25px; padding-top: 15px; border-top: 1px dashed #303036; }
+    </style>
+</head>
+<body>
+    <h3 style="margin-top:0;">Modular Screen Links & Integrations</h3>
+    <form id="config-form">
+        <div class="form-group">
+            <label for="position">Overlay Position:</label>
+            <select id="position">
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="orientation">Layout Direction:</label>
+            <select id="orientation">
+                <option value="vertical">Vertical (Column)</option>
+                <option value="horizontal">Horizontal (Row)</option>
+            </select>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #303036; margin: 20px 0;">
+        <label>Active Buttons & Integration Modules:</label>
+        
+        <div id="buttons-container"></div>
+        <button type="button" class="add-btn" id="add-button-btn">+ Add New Link / Integration Module</button>
+
+        <!-- INFRASTRUKTURA POD PRZYSZŁOŚCIOWY BACKEND / API -->
+        <div class="advanced-section">
+            <label for="ebsUrl">Custom Backend API Endpoint (Optional / Future Use):</label>
+            <input type="url" id="ebsUrl" placeholder="https://api.yourdomain.com/v1">
+        </div>
+
+        <button type="submit" class="save-btn" style="margin-top:20px;">Save All Settings</button>
+        <div id="status">✓ Configuration saved successfully!</div>
+    </form>
+
+    <script>
+        const container = document.getElementById('buttons-container');
+        let buttonCount = 0;
+
+        function createButtonCard(data = { type: 'custom_link', label: '', url: '', iconUrl: '', integrationId: '' }) {
+            buttonCount++;
+            const card = document.createElement('div');
+            card.className = 'button-card';
+            card.id = `card-${buttonCount}`;
+            card.innerHTML = `
+                <button type="button" class="remove-btn" onclick="removeCard('${card.id}')">Remove</button>
+                
+                <div class="form-group">
+                    <label>Module / Button Type:</label>
+                    <select class="btn-type" onchange="toggleModuleFields('${card.id}')">
+                        <option value="custom_link" ${data.type === 'custom_link' ? 'selected' : ''}>Custom URL Link</option>
+                        <option value="tipply" ${data.type === 'tipply' ? 'selected' : ''}>Tipply Donation Widget</option>
+                        <option value="discord" ${data.type === 'discord' ? 'selected' : ''}>Discord Invite / Auth Integration</option>
+                        <option value="spotify" ${data.type === 'spotify' ? 'selected' : ''}>Spotify Now Playing Integration</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Button Label / Name:</label>
+                    <input type="text" class="btn-label" value="${data.label || ''}" placeholder="e.g. Tip / Discord" required>
+                </div>
+                
+                <div class="form-group field-url">
+                    <label>Target URL:</label>
+                    <input type="url" class="btn-url" value="${data.url || ''}" placeholder="https://...">
+                </div>
+
+                <div class="form-group">
+                    <label>Icon URL (Transparent PNG):</label>
+                    <input type="url" class="btn-icon" value="${data.iconUrl || ''}" placeholder="https://i.imgur.com/..." required>
+                </div>
+
+                <div class="form-group field-integration" style="display:none;">
+                    <label>Integration Channel / App ID (Future API):</label>
+                    <input type="text" class="btn-integration-id" value="${data.integrationId || ''}" placeholder="ID / API Key">
+                </div>
+            `;
+            container.appendChild(card);
+            toggleModuleFields(card.id);
+        }
+
+        function toggleModuleFields(cardId) {
+            const card = document.getElementById(cardId);
+            const type = card.querySelector('.btn-type').value;
+            const urlField = card.querySelector('.field-url');
+            const integrationField = card.querySelector('.field-integration');
+
+            if (type === 'custom_link') {
+                urlField.style.display = 'block';
+                integrationField.style.display = 'none';
+            } else {
+                urlField.style.display = 'block'; // Można zachować np. jako fallback link
+                integrationField.style.display = 'block';
+            }
+        }
+
+        function removeCard(id) {
+            const card = document.getElementById(id);
+            if (card) card.remove();
+        }
+
+        document.getElementById('add-button-btn').addEventListener('click', () => {
+            createButtonCard();
+        });
+
+        window.Twitch.ext.configuration.onChanged(() => {
+            if (window.Twitch.ext.configuration.broadcaster) {
+                try {
+                    const config = JSON.parse(window.Twitch.ext.configuration.broadcaster.content);
+                    document.getElementById('position').value = config.position || 'top-right';
+                    document.getElementById('orientation').value = config.orientation || 'vertical';
+                    document.getElementById('ebsUrl').value = config.ebsUrl || '';
+                    
+                    container.innerHTML = '';
+                    if (config.buttons && config.buttons.length > 0) {
+                        config.buttons.forEach(btn => createButtonCard(btn));
+                    } else {
+                        createButtonCard({ type: 'custom_link', label: 'Donate', url: '', iconUrl: '' });
+                    }
+                } catch (e) { console.error('Config error', e); }
+            } else {
+                createButtonCard({ type: 'custom_link', label: 'Donate', url: '', iconUrl: '' });
+            }
+        });
+
+        document.getElementById('config-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const buttonsData = [];
+            
+            document.querySelectorAll('.button-card').forEach(card => {
+                buttonsData.push({
+                    type: card.querySelector('.btn-type').value,
+                    label: card.querySelector('.btn-label').value,
+                    url: card.querySelector('.btn-url').value,
+                    iconUrl: card.querySelector('.btn-icon').value,
+                    integrationId: card.querySelector('.btn-integration-id').value
+                });
+            });
+
+            const configData = {
+                position: document.getElementById('position').value,
+                orientation: document.getElementById('orientation').value,
+                ebsUrl: document.getElementById('ebsUrl').value,
+                buttons: buttonsData,
+                schemaVersion: "3.0" // Przyszłościowa wersja architektury
+            };
+
+            window.Twitch.ext.configuration.set('broadcaster', '1.0', JSON.stringify(configData));
+            
+            const status = document.getElementById('status');
+            status.style.display = 'block';
+            setTimeout(() => status.style.display = 'none', 3000);
+        });
+    </script>
+</body>
+</html>
