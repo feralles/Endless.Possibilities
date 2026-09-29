@@ -1,10 +1,4 @@
-# Endless.Possibilities
-
-Main repository for the Endless.Possibilities corporate project. Individual projects are kept in separate directories.
-
-## Projects
-
-- [sleapytv-donate-component](sleapytv-donate-component/README.md) - Twitch donation banner component.# sleapyTV Donate Component
+# sleapyTV Donate Component
 
 A simple Twitch Extension component that displays a clickable donation banner link
 link.
