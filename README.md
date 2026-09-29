@@ -1,63 +1,27 @@
-# Sleapytv Link Twitch Extension
+# sleapyTV Donate Component
 
-This package contains the Twitch Extension files for the broadcaster configuration page and stream overlay.
+Prosty komponent rozszerzenia Twitch wyświetlający klikalny baner do donacji.
 
-## Included files
+## Pliki
 
-- sleapytv-link/config.html
-- sleapytv-link/video_overlay.html
+- `config.html` - strona konfiguracji rozszerzenia.
+- `video_component.html` - komponent wideo wyświetlający baner i otwierający stronę donacji.
+- `donate_banner.jpg` - grafika tła banera.
+- `sleapytv-donate.zip` - paczka rozszerzenia, jeśli korzystasz z gotowego archiwum.
 
-## What this extension does
+## Własny link do donacji
 
-- allows the broadcaster to configure a list of action buttons
-- supports custom links and integration-style buttons
-- renders a modular overlay on stream
-- uses the Twitch extension helper API and broadcaster configuration storage
+Przed przesłaniem plików otwórz `video_component.html` i zastąp tekst `PLESE ADD YOUR DONATE LINK` własnym adresem do donacji. Występuje on w dwóch miejscach w tym pliku; zaktualizuj oba.
 
-## Recommended Twitch setup
+## Własny baner
 
-1. Open the Twitch Developer Console.
-2. Create or edit a Twitch Extension.
-3. Upload the files as your extension frontend pages.
-4. Use the following page mappings:
-   - Config page: config.html
-   - Overlay page: video_overlay.html
-5. In the extension panel, set the proper config page and overlay URL values.
+Przygotuj własną grafikę i dodaj ją do paczki rozszerzenia w Twitch Developer Console pod dokładną nazwą `donate_banner.jpg`. Kod komponentu odwołuje się do tej nazwy, więc nie zmieniaj jej bez aktualizacji ścieżki w `video_component.html`.
 
-## Important notes
+## Konfiguracja w Twitch Developer Console
 
-- The extension relies on the Twitch helper script:
-  https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js
-- The config is saved in the broadcaster configuration area using the Twitch extension configuration API.
-- The overlay is generated dynamically from the saved config.
-- If the backend endpoint or auth data is not available, the code gracefully falls back to the button URL when possible.
+1. Otwórz Twitch Developer Console i wybierz swoje rozszerzenie.
+2. Wgraj `config.html` jako stronę konfiguracji oraz `video_component.html` jako komponent wideo.
+3. Dodaj do paczki `donate_banner.jpg` oraz pozostałe wymagane pliki rozszerzenia.
+4. Zapisz zmiany i sprawdź komponent w podglądzie rozszerzenia.
 
-## Runtime safety
-
-The current version includes basic guards for:
-- missing config
-- malformed JSON
-- missing auth token
-- missing button URL
-- empty or invalid values
-
-This helps avoid hard crashes in the Twitch extension runtime.
-
-## File structure
-
-```text
-.
-├── README.md
-├── sleapytv-link/
-│   ├── config.html
-│   └── video_overlay.html
-└── package zip generated separately
-```
-
-## Deployment reminder
-
-Keep the file names as-is unless you also update the Twitch extension configuration to match the new names.
-
-## Support
-
-This is a starter/functional build for extension configuration and overlay presentation. It is intended to be adjusted for your final backend integration and branding.
+Komponent korzysta z Twitch Extension Helper: `https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js`.

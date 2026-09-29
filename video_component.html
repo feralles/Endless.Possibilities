@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta charset="UTF-8">
+    <script src="https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #0e0e10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+        }
+
+        .banner-card {
+            position: relative;
+            width: 90%;
+            height: 85%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: url('donate_banner.jpg') center/cover no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+            border: 2px solid rgba(0, 210, 255, 0.6);
+            cursor: pointer;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        /* Przezroczysta nakładka przyciemniająca dla lepszego kontrastu */
+        .banner-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(10, 15, 30, 0.55);
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            user-select: none;
+        }
+
+        .sub-title {
+            color: #00d2ff;
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(0, 210, 255, 0.8);
+            margin-bottom: -5px;
+        }
+
+        .main-title {
+            color: #ffffff;
+            font-size: 58px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px #00d2ff, 0 0 30px #0055ff, 3px 3px 0px #000;
+        }
+
+        .cta-btn {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #00d2ff, #0055ff);
+            color: #ffffff;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.6);
+        }
+
+        .cta-btn:active {
+            background: linear-gradient(135deg, #0088ff, #0033aa); /* ciemniejszy / inny odcień niebieskiego */
+            color: #9b04ff; /* zmiana koloru tekstu, np. na żółty lub po prostu jasny akcent */
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.9); /* mocniejsza poświata */
+        }
+
+        .banner-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 35px rgba(0, 210, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="donate-card" class="banner-card">
+        <div class="banner-overlay"></div>
+        <div class="content">
+            <div class="sub-title">SLEAPY TV</div>
+            <div class="main-title"><a href="PLESE ADD YOUR DONATE LINK" target="_blank">DONATE</div></a>
+            <div class="cta-btn">KLIKNIJ, ABY WYSŁAĆ TIPA 💙</div>
+        </div>
+    </div>
+
+    <script>
+        // === TUTAJ WKLEJ SWÓJ ADRES DO TIPÓW ===
+        const TIP_URL = "PLESE ADD YOUR DONATE LINK";
+
+        document.getElementById('donate-card').addEventListener('click', () => {
+            if (window.Twitch && window.Twitch.ext && typeof window.Twitch.ext.openURL === 'function') {
+                window.Twitch.ext.openURL(TIP_URL);
+            } else {
+                window.open(TIP_URL, '_blank');
+            }
+        });
+    </script>
+</body>
+</html>
