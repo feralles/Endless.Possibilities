@@ -8,7 +8,7 @@ link.
 - `config.html` - the extension configuration page.
 - `video_component.html` - the video component that displays the banner and opens the donation page.
 - `donate_banner.jpg` - the banner background image.
-- `sleapytv-donate.zip` - the extension package, if you are using the provided archive.
+- [sleapytv-donate.zip](https://drive.google.com/file/d/1Lsi7nySv7YoH0TKkg69njHXHorzzhaSX/view?usp=sharing) - the extension package.
 
 ## Set Your Donation Link
 
