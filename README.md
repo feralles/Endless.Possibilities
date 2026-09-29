@@ -1,27 +1,36 @@
 # sleapyTV Donate Component
 
-Prosty komponent rozszerzenia Twitch wyświetlający klikalny baner do donacji.
+A simple Twitch Extension component that displays a clickable donation banner link
+link.
 
-## Pliki
+## Files
 
-- `config.html` - strona konfiguracji rozszerzenia.
-- `video_component.html` - komponent wideo wyświetlający baner i otwierający stronę donacji.
-- `donate_banner.jpg` - grafika tła banera.
-- `sleapytv-donate.zip` - paczka rozszerzenia, jeśli korzystasz z gotowego archiwum.
+- `config.html` - the extension configuration page.
+- `video_component.html` - the video component that displays the banner and opens the donation page.
+- `donate_banner.jpg` - the banner background image.
+- `sleapytv-donate.zip` - the extension package, if you are using the provided archive.
 
-## Własny link do donacji
+## Set Your Donation Link
 
-Przed przesłaniem plików otwórz `video_component.html` i zastąp tekst `PLESE ADD YOUR DONATE LINK` własnym adresem do donacji. Występuje on w dwóch miejscach w tym pliku; zaktualizuj oba.
+Before uploading the files, open `video_component.html` and replace
+`PLESE ADD YOUR DONATE LINK` with your donation URL. This placeholder appears
+twice in the file; update both occurrences.
 
-## Własny baner
+## Customize the Banner
 
-Przygotuj własną grafikę i dodaj ją do paczki rozszerzenia w Twitch Developer Console pod dokładną nazwą `donate_banner.jpg`. Kod komponentu odwołuje się do tej nazwy, więc nie zmieniaj jej bez aktualizacji ścieżki w `video_component.html`.
+Prepare if you will your own image with the exact filename `donate_banner.jpg`
+and add it to the zip package, that goes to Twitch Developer Console. The
+component references this filename, so do not rename it unless you also update
+the image path in `video_component.html`.
 
-## Konfiguracja w Twitch Developer Console
+## Configure in the Twitch Developer Console
 
-1. Otwórz Twitch Developer Console i wybierz swoje rozszerzenie.
-2. Wgraj `config.html` jako stronę konfiguracji oraz `video_component.html` jako komponent wideo.
-3. Dodaj do paczki `donate_banner.jpg` oraz pozostałe wymagane pliki rozszerzenia.
-4. Zapisz zmiany i sprawdź komponent w podglądzie rozszerzenia.
+1. Open the Twitch Developer Console and select your extension or create new
+	one! - link to shor video with HOWTO:
+2. ZIP all 3 files `confing.html` `video_component.html` `donate_banner.jpg`
+3. Upload ZIPED package in your Twitch Dev Console
+4. Save your changes and test the component in the extension preview. For more
+	information please revisite HOWTO tutorial.
 
-Komponent korzysta z Twitch Extension Helper: `https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js`.
+The component uses the Twitch Extension Helper:
+`https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js`.
