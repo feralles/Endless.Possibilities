@@ -26,7 +26,7 @@ the image path in `video_component.html`.
 ## Configure in the Twitch Developer Console
 
 1. Open the Twitch Developer Console and select your extension or create new
-	one! - link to shor video with HOWTO:
+	one! - link to shor video with HOWTO: https://drive.google.com/file/d/1sakw2KDPUovffUrDINFEIFYjzCBoTtk6/view?usp=sharing
 2. ZIP all 3 files `confing.html` `video_component.html` `donate_banner.jpg`
 3. Upload ZIPED package in your Twitch Dev Console
 4. Save your changes and test the component in the extension preview. For more
