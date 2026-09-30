@@ -1,4 +1,5 @@
-# Endless.Possibilities - Generations mix... people change... new life's... are!
+# Endless.Possibilities
+  Generations mix... people change... new life's... are!
 
 Repository for the Endless.Possibilities corporate/individual projects. 
 
