@@ -1,7 +1,6 @@
 # sleapyTV Donate Component
 
-A simple Twitch Extension component that displays a clickable donation banner link
-link.
+A simple Twitch Extension component that displays a clickable donation banner link.
 
 ## Files
 
@@ -13,7 +12,7 @@ link.
 ## Set Your Donation Link
 
 Before uploading the files, open `video_component.html` and replace
-`PLESE ADD YOUR DONATE LINK` with your donation URL. This placeholder appears
+`PLEASE ADD YOUR DONATE LINK` with your donation URL. This placeholder appears
 twice in the file; update both occurrences.
 
 ## Customize the Banner
@@ -28,9 +27,9 @@ the image path in `video_component.html`.
 1. Open the Twitch Developer Console and select your extension or create new
 	one! - link to shor video with HOWTO: https://drive.google.com/file/d/1sakw2KDPUovffUrDINFEIFYjzCBoTtk6/view?usp=sharing
 2. ZIP all 3 files `confing.html` `video_component.html` `donate_banner.jpg`
-3. Upload ZIPED package in your Twitch Dev Console
+3. Upload ZIPPED package in your Twitch Dev Console
 4. Save your changes and test the component in the extension preview. For more
-	information please revisite HOWTO tutorial.
+	information please revisit HOWTO tutorial.
 
 The component uses the Twitch Extension Helper:
 `https://extension-files.twitch.tv/helper/v1/twitch-ext.min.js`.
